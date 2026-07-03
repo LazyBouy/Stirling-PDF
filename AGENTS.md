@@ -358,7 +358,7 @@ return useToolOperation({
 ## Architecture Overview
 
 ### Project Structure
-- **Backend**: Spring Boot application
+- **Backend**: Multi-module Spring Boot build under `app/` (Gradle modules — see `settings.gradle`)
 - **Frontend**: React-based SPA in `/frontend` directory
   - **File Storage**: IndexedDB for client-side file persistence and thumbnails
   - **Internationalization**: JSON-based translations (converted from backend .properties)
@@ -366,9 +366,19 @@ return useToolOperation({
 - **Security**: Spring Security with optional authentication (controlled by `DOCKER_ENABLE_SECURITY`)
 - **Configuration**: YAML-based configuration with environment variable overrides
 
+### Backend Module Structure
+The backend mirrors the frontend's layered model (core → proprietary → saas):
+- **`app/common/`** — shared library code used across modules
+- **`app/core/`** — OSS backend (Gradle project `stirling-pdf`); packages `stirling.software.SPDF` and `stirling.software.common`. Main class: `app/core/.../SPDF/SPDFApplication.java`
+- **`app/proprietary/`** — licensed features: `security`, `storage`, `workflow`, `policy`, `access`, `integration` (each with its own `controller` package)
+- **`app/saas/`** — SaaS-only backend, including the AI-engine proxy controllers (`stirling.software.saas.ai`)
+
+The bleeding-edge stack note above references `app/core/` and `app/common/` — that's this layout.
+
 ### Controller Architecture
-- **API Controllers** (`src/main/java/.../controller/api/`): REST endpoints for PDF operations
-  - Organized by function: converters, security, misc, pipeline
+- **API Controllers**: REST endpoints for PDF operations, organized by function (converters, security, misc, pipeline)
+  - OSS controllers: `app/core/src/main/java/stirling/software/SPDF/controller/`
+  - Proprietary/SaaS controllers live under the respective module's `controller` packages
   - Follow pattern: `@RestController` + `@RequestMapping("/api/v1/...")`
 
 ### Key Components
